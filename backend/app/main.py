@@ -2,28 +2,32 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 import uvicorn
-
+import asyncio
 from app.core.config import settings
 from app.api.endpoints import data, predictions, websocket
 from app.db.influx_client import init_influxdb
+from app.db.influx_client import create_initial_data
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Manage application startup and shutdown events."""
-    print("Starting application...")
+    print("🚀 Starting application...")
     
-    try:
-        # Initialize InfluxDB properly without threading
-        # Most DB clients handle their own internal connection pooling
-        init_influxdb()
-        print("InfluxDB connection initialized.")
-    except Exception as e:
-        print(f"Warning: InfluxDB failed to initialize: {e}")
-        # We continue so the app can still start and show health checks
+    init_influxdb() 
+
+    asyncio.create_task(run_seeding_in_background())
     
+    print("✅ Port binding in progress, seeding will continue in background.")
     yield
-    
-    print("Application shutdown...")
+    print("🛑 Application shutdown...")
+
+async def run_seeding_in_background():
+    try:
+        # If your function is synchronous, use asyncio.to_thread
+        # to prevent it from blocking the event loop
+        await asyncio.to_thread(create_initial_data)
+        print("📊 Initial data seeding completed successfully.")
+    except Exception as e:
+        print(f"⚠️ Background seeding failed: {e}")
 
 # Create FastAPI app
 app = FastAPI(

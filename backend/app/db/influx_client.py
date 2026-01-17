@@ -100,6 +100,16 @@ def query_sensor_data(building_id: str = None, data_type: str = None, hours: int
 
 def create_initial_data():
     """Create initial synthetic data for demonstration"""
+    # 1. Check if data already exists
+    query = f'from(bucket:"{settings.INFLUXDB_BUCKET}") |> range(start: -1y) |> limit(n:1)'
+    result = query_api.query(query)
+    
+    if len(result) > 0:
+        print("⏭️ Data already exists. Skipping seeding.")
+        return
+
+    # 2. If no data, run your seeding logic
+    print("🌱 Seeding initial campus data...")
     buildings = [f"building_{i}" for i in range(1, settings.CAMPUS_BUILDINGS + 1)]
     data_types = ["energy", "water", "occupancy", "temperature", "co2"]
     
