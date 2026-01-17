@@ -26,11 +26,6 @@ def init_influxdb():
             token=settings.INFLUXDB_TOKEN,
             org=settings.INFLUXDB_ORG
         )
-        
-        # Check if the server is actually reachable before proceeding
-        health = client.ready()
-        if health.status != "ready":
-             raise Exception("InfluxDB server is not ready")
 
         write_api = client.write_api(write_options=SYNCHRONOUS)
         query_api = client.query_api()
