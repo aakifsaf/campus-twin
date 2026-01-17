@@ -155,7 +155,7 @@ def get_building_stats():
     for building in buildings:
         query = f'''
         from(bucket: "{settings.INFLUXDB_BUCKET}")
-            |> range(start: -24h)
+            |> range(start: -10d)
             |> filter(fn: (r) => r._measurement == "sensor_data")
             |> filter(fn: (r) => r.building == "{building}")
             |> filter(fn: (r) => r.type == "energy" or r.type == "water" or r.type == "co2" or r.type == "occupancy")
