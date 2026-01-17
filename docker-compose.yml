@@ -1,0 +1,54 @@
+services:
+  influxdb:
+    image: influxdb:2.7
+    container_name: campus_influxdb
+    ports:
+      - "8086:8086"
+    environment:
+      - DOCKER_INFLUXDB_INIT_MODE=setup
+      - DOCKER_INFLUXDB_INIT_USERNAME=admin
+      - DOCKER_INFLUXDB_INIT_PASSWORD=campus123
+      - DOCKER_INFLUXDB_INIT_ORG=campus_org
+      - DOCKER_INFLUXDB_INIT_BUCKET=campus_data
+      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=my-super-secret-auth-token
+    volumes:
+      - influxdb_data:/var/lib/influxdb2
+    networks:
+      - campus_network
+
+  backend:
+    build: ./backend
+    container_name: campus_backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+    environment:
+      - INFLUXDB_URL=http://influxdb:8086
+      - INFLUXDB_TOKEN=my-super-secret-auth-token
+      - INFLUXDB_ORG=campus_org
+      - INFLUXDB_BUCKET=campus_data
+    depends_on:
+      - influxdb
+    networks:
+      - campus_network
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+  frontend:
+    build: ./frontend
+    container_name: campus_frontend
+    ports:
+      - "80:80"
+    volumes:
+      - ./frontend:/app
+    depends_on:
+      - backend
+    networks:
+      - campus_network
+
+networks:
+  campus_network:
+    driver: bridge
+
+volumes:
+  influxdb_data:
