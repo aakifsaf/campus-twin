@@ -31,7 +31,6 @@ def init_influxdb():
         query_api = client.query_api()
         
         logger.info(f"✅ Connected to InfluxDB at {settings.INFLUXDB_URL}")
-        create_initial_data()
         
     except Exception as e:
         logger.error(f"❌ Failed to connect to InfluxDB: {e}")
