@@ -10,23 +10,19 @@ from app.db.influx_client import init_influxdb
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Manage application startup and shutdown events."""
-    # Startup - don't block on InfluxDB
     print("Starting application...")
     
-    # Start InfluxDB connection in background
-    import threading
-    def init_db():
-        from app.db.influx_client import init_influxdb
+    try:
+        # Initialize InfluxDB properly without threading
+        # Most DB clients handle their own internal connection pooling
         init_influxdb()
-    
-    db_thread = threading.Thread(target=init_db, daemon=True)
-    db_thread.start()
-    
-    print("Application startup initiated (InfluxDB connecting in background)...")
+        print("InfluxDB connection initialized.")
+    except Exception as e:
+        print(f"Warning: InfluxDB failed to initialize: {e}")
+        # We continue so the app can still start and show health checks
     
     yield
     
-    # Shutdown
     print("Application shutdown...")
 
 # Create FastAPI app
