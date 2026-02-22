@@ -13,7 +13,7 @@ router = APIRouter()
 async def get_sensor_data(
     building_id: Optional[str] = Query(None, description="Filter by building ID"),
     data_type: Optional[str] = Query(None, description="Filter by data type"),
-    hours: int = Query(24, description="Hours of data to retrieve", ge=1, le=168),
+    hours: int = Query(24, description="Hours of data to retrieve", ge=1, le=720),
     limit: int = Query(1000, description="Maximum data points", ge=1, le=10000)
 ):
     """
@@ -38,12 +38,15 @@ async def get_sensor_data(
         raise HTTPException(status_code=500, detail=f"Error retrieving data: {str(e)}")
 
 @router.get("/stats", response_model=BuildingStatsResponse)
-async def get_building_statistics():
+async def get_building_statistics(
+    hours: int = Query(24, description="Hours of data to retrieve", ge=1, le=720)
+):
     """
     Get sustainability statistics for all buildings
     """
     try:
-        stats = get_building_stats()
+        # Pass the hours variable to the function
+        stats = get_building_stats(hours) 
         buildings_list = list(stats.values())
         
         # Calculate campus average score

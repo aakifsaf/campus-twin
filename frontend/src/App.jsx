@@ -263,7 +263,7 @@ function App() {
                 <div className="h-full flex flex-col">
                   {/* Add tabs */}
                   <div className="flex space-x-1 border-b border-gray-700 mb-4">
-                    {['overview', 'predictions', 'what-if', 'analytics'].map((tab) => (
+                    {['overview', 'predictions', 'what-if'].map((tab) => (
                       <button
                         key={tab}
                         onClick={() => setActiveTab(tab)}

@@ -7,7 +7,7 @@ class Settings(BaseSettings):
     PROJECT_NAME: str = "Smart Campus Digital Twin"
     
     # CORS
-    BACKEND_CORS_ORIGINS: list = ["http://localhost:5173", "http://localhost:3000", "http://localhost","http://localhost:80"]
+    BACKEND_CORS_ORIGINS: list = ["http://localhost:5173", "http://localhost:3000", "http://localhost","http://localhost:80","https://campus-twin.vercel.app"]
     
     # InfluxDB Configuration
     INFLUXDB_URL: str = "http://localhost:8086"

@@ -1,12 +1,38 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { FiBarChart2, FiTrendingUp, FiTrendingDown, FiCalendar } from 'react-icons/fi'
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
-
+import { dataAPI } from '../../services/api'
 const Dashboard = ({ stats }) => {
   const [timeRange, setTimeRange] = useState('24h')
+  const [filterstats, setfilterStats] = useState(stats)
   
+  const getHoursFromRange = (range) => {
+    switch (range) {
+      case '24h': return 24;
+      case '7d': return 168; // 7 * 24
+      case '30d': return 720; // 30 * 24
+      default: return 24;
+    }
+  }
+const fetchfilterData = async (currentRange) => {
+      try {
+        const hours = getHoursFromRange(currentRange);
+        
+        const data = await dataAPI.getBuildingStats({ hours }) 
+        
+        const buildings = data.buildings || data.data || [] 
+        console.log("Filter data:",buildings)
+        setfilterStats(buildings)
+      } catch (error) {
+        console.error('Error fetching data:', error)
+      }
+    }
+    
+  useEffect(() => {
+    fetchfilterData(timeRange)
+  }, [timeRange])
   // Prepare chart data
-  const energyData = stats.map(building => ({
+  const energyData = filterstats.map(building => ({
     name: building.name || building.building_id,
     energy: building.avg_energy || 0,
     score: building.sustainability_score || 0,
@@ -24,9 +50,9 @@ const Dashboard = ({ stats }) => {
   ]
 
   const statusDistribution = {
-    good: stats.filter(b => b.status === 'good').length,
-    warning: stats.filter(b => b.status === 'warning').length,
-    critical: stats.filter(b => b.status === 'critical').length
+    good: filterstats.filter(b => b.status === 'good').length,
+    warning: filterstats.filter(b => b.status === 'warning').length,
+    critical: filterstats.filter(b => b.status === 'critical').length
   }
 
   return (
@@ -36,7 +62,7 @@ const Dashboard = ({ stats }) => {
         <div className="flex justify-between items-center">
           <h2 className="text-xl font-bold">Campus Analytics Dashboard</h2>
           <div className="flex space-x-2">
-            {['24h', '7d', '30d', '90d'].map((range) => (
+            {['24h', '7d', '30d'].map((range) => (
               <button
                 key={range}
                 onClick={() => setTimeRange(range)}
@@ -55,7 +81,7 @@ const Dashboard = ({ stats }) => {
               <div>
                 <p className="text-gray-400 text-sm">Avg. Energy Consumption</p>
                 <p className="text-2xl font-bold">
-                  {Math.round(stats.reduce((sum, b) => sum + (b.avg_energy || 0), 0) / stats.length) || 0} kWh
+                  {Math.round(filterstats.reduce((sum, b) => sum + (b.avg_energy || 0), 0) / filterstats.length) || 0} kWh
                 </p>
               </div>
               <FiTrendingDown className="text-red-500 text-2xl" />
@@ -68,7 +94,7 @@ const Dashboard = ({ stats }) => {
               <div>
                 <p className="text-gray-400 text-sm">Peak Occupancy</p>
                 <p className="text-2xl font-bold">
-                  {Math.max(...stats.map(b => b.occupancy || 0))} people
+                  {Math.max(...filterstats.map(b => b.occupancy || 0))} people
                 </p>
               </div>
               <FiTrendingUp className="text-green-500 text-2xl" />
@@ -81,7 +107,7 @@ const Dashboard = ({ stats }) => {
               <div>
                 <p className="text-gray-400 text-sm">Carbon Footprint</p>
                 <p className="text-2xl font-bold">
-                  {Math.round(stats.reduce((sum, b) => sum + (b.avg_energy || 0) * 0.233, 0))} kg CO₂
+                  {Math.round(filterstats.reduce((sum, b) => sum + (b.avg_energy || 0) * 0.233, 0))} kg CO₂
                 </p>
               </div>
               <FiBarChart2 className="text-blue-500 text-2xl" />
@@ -163,13 +189,13 @@ const Dashboard = ({ stats }) => {
                 <div className="absolute inset-0 rounded-full border-8 border-yellow-500"
                   style={{ 
                     clipPath: `circle(50% at 50% 50%)`,
-                    transform: `rotate(${statusDistribution.good / stats.length * 360}deg)`
+                    transform: `rotate(${statusDistribution.good / filterstats.length * 360}deg)`
                   }}>
                 </div>
                 <div className="absolute inset-0 rounded-full border-8 border-red-500"
                   style={{ 
                     clipPath: `circle(50% at 50% 50%)`,
-                    transform: `rotate(${(statusDistribution.good + statusDistribution.warning) / stats.length * 360}deg)`
+                    transform: `rotate(${(statusDistribution.good + statusDistribution.warning) / filterstats.length * 360}deg)`
                   }}>
                 </div>
               </div>
@@ -197,7 +223,7 @@ const Dashboard = ({ stats }) => {
           <div className="glass-card p-4 col-span-2">
             <h3 className="font-semibold mb-4">Top Performing Buildings</h3>
             <div className="space-y-3">
-              {stats
+              {filterstats
                 .sort((a, b) => (b.sustainability_score || 0) - (a.sustainability_score || 0))
                 .slice(0, 5)
                 .map((building, index) => (

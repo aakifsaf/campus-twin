@@ -37,8 +37,8 @@ export const dataAPI = {
   },
   
   // Get building statistics
-  getBuildingStats: () => {
-    return api.get(API_ENDPOINTS.DATA.STATS);
+  getBuildingStats: (params) => {
+    return api.get(API_ENDPOINTS.DATA.STATS, { params }); 
   },
   
   // Get buildings list

@@ -147,7 +147,7 @@ def create_initial_data():
     
     logger.info("Initial data created successfully")
 
-def get_building_stats():
+def get_building_stats(hours: int = 24): 
     """Get statistics for all buildings including water, co2, and occupancy"""
     buildings = [f"building_{i}" for i in range(1, settings.CAMPUS_BUILDINGS + 1)]
     stats = {}
@@ -155,11 +155,12 @@ def get_building_stats():
     for building in buildings:
         query = f'''
         from(bucket: "{settings.INFLUXDB_BUCKET}")
-            |> range(start: -10d)
+            |> range(start: -{hours}h) 
             |> filter(fn: (r) => r._measurement == "sensor_data")
             |> filter(fn: (r) => r.building == "{building}")
             |> filter(fn: (r) => r.type == "energy" or r.type == "water" or r.type == "co2" or r.type == "occupancy")
-            |> aggregateWindow(every: 1h, fn: mean, createEmpty: false)
+            |> mean()
+            |> pivot(rowKey:["_start"], columnKey: ["type"], valueColumn: "_value")
         '''
         
         try:
@@ -175,21 +176,13 @@ def get_building_stats():
             # Process the result (should be just one record after pivot)
             found_data = False
             for table in tables:
+                for record in table.records:
                     found_data = True
-                    for record in table.records:
-                        # Get the value and the metric type from the current row
-                        current_value = record.get_value() or 0
-                        metric_type = record.values.get("type") # e.g., 'energy', 'water', 'co2'
-
-                        # Assign to the correct dictionary key based on the 'type'
-                        if metric_type == "energy":
-                            building_data["energy"] = current_value
-                        elif metric_type == "water": # Checks for 'water' in DB, maps to 'water_usage'
-                            building_data["water_usage"] = current_value
-                        elif metric_type == "co2":   # Checks for 'co2' in DB, maps to 'co2_levels'
-                            building_data["co2_levels"] = current_value
-                        elif metric_type == "occupancy":
-                            building_data["occupancy"] = current_value
+                    # Because of pivot, we access keys directly
+                    building_data["energy"] = record.values.get("energy", 0)
+                    building_data["water_usage"] = record.values.get("water", 0)
+                    building_data["co2_levels"] = record.values.get("co2", 0)
+                    building_data["occupancy"] = record.values.get("occupancy", 0)
 
             if found_data:
                 # Calculate sustainability score (Example formula: Weighted average)
