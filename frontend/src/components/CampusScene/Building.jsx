@@ -59,12 +59,16 @@ const Building = ({ position, floors = 3, color = '#3b82f6', data, isSelected, o
   }
 
   // Calculate roof color based on sustainability
-  const roofColor = useMemo(() => {
-    const score = data.sustainability_score || 50
-    if (score >= 70) return '#059669' // Green roof
-    if (score >= 40) return '#d97706' // Yellow roof
-    return '#dc2626' // Red roof
-  }, [data.sustainability_score])
+const roofColor = useMemo(() => {
+    if (!color) return '#374151'; // Fallback gray
+    
+    const baseColor = new THREE.Color(color);
+    
+    // Lerp (blend) the base color 20% towards black to create a natural roof shadow
+    const darkenedColor = baseColor.lerp(new THREE.Color('#000000'), 0.2);
+    
+    return `#${darkenedColor.getHexString()}`;
+  }, [color]);
 
   return (
     <group ref={groupRef} position={position}>
