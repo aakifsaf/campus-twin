@@ -1,27 +1,126 @@
-import api, { dataAPI } from './api'
+import api from './api' // Ensure this imports your axios instance correctly
 
 class MLService {
   constructor() {
-    this.baseURL = '/predict'
+    this.baseURL = '/ml'
   }
 
-  // prediction with ML
+  // 1. Time-Series Forecasting
   async makePrediction(buildingId, dataType, hoursAhead = 24, includeAnomaly = true) {
     try {
-      const response = await api.post(`${this.baseURL}/`, {
+      const response = await api.post(`${this.baseURL}/predict`, {
         building_id: buildingId,
         data_type: dataType,
         hours_ahead: hoursAhead,
         include_anomaly: includeAnomaly
-      })
-      
-      return response
+      });
+      return response;
     } catch (error) {
-      console.error('Prediction error:', error)
-      // Return mock prediction for development
-      return this.generateMockPrediction(buildingId, dataType, hoursAhead)
+      console.error('Prediction error:', error);
+      return this.generateMockPrediction(buildingId, dataType, hoursAhead);
     }
   }
+
+  // 2. Predictive Maintenance Alerts
+  async getPredictiveMaintenance(buildingId) {
+    try {
+      const response = await api.get(`${this.baseURL}/maintenance`, {
+        params: { building_id: buildingId }
+      });
+      return response;
+    } catch (error) {
+      console.error('Maintenance API error:', error);
+      return this.generateMockMaintenance(buildingId);
+    }
+  }
+
+  // 3. Anomaly Detection
+  async getAnomalies(buildingId, dataType = 'energy', currentUsage = null) {
+    try {
+      // Build params object, only adding currentUsage if it's provided
+      const params = { 
+        building_id: buildingId,
+        data_type: dataType
+      };
+      if (currentUsage !== null) {
+        params.current_usage = currentUsage;
+      }
+
+      const response = await api.get(`${this.baseURL}/anomalies`, { params });
+      return response;
+    } catch (error) {
+      console.error('Anomalies API error:', error);
+      return this.generateMockAnomalies(buildingId, dataType);
+    }
+  }
+
+  // --- MOCK FALLBACK GENERATORS (UNCOMMENTED) ---
+  // These act as a safety net if your FastAPI backend is offline.
+
+  generateMockPrediction(buildingId, dataType, hoursAhead) {
+    const base = dataType === 'energy' ? 150 : (dataType === 'water' ? 300 : 50);
+    return {
+      building_id: buildingId,
+      data_type: dataType,
+      chart_data: Array.from({ length: hoursAhead }).map((_, i) => ({
+        time: `${(i + 1).toString().padStart(2, '0')}:00`,
+        predicted: Math.floor(base + Math.random() * 50 * Math.sin(i / 3)),
+        baseline: base
+      })),
+      peak_forecast: {
+        time: "14:00",
+        value: dataType === 'energy' ? "375 kWh" : (dataType === 'water' ? "750 L" : "125 ppl"),
+        reason: "Simulated Peak Load (API Offline)",
+        icon_type: dataType
+      }
+    };
+  }
+
+  generateMockMaintenance(buildingId) {
+    return {
+      alerts: [
+        { 
+          id: 1, 
+          equipment: `HVAC Unit A (Roof) - ${buildingId.split('_').pop()}`, 
+          health: 24, 
+          eta: '14 Days', 
+          issue: 'API Offline: Simulated High Vibration', 
+          status: 'critical' 
+        }
+      ]
+    };
+  }
+
+  generateMockAnomalies(buildingId, dataType) {
+    return {
+      anomalies: [
+        { 
+          id: 1, 
+          time: '03:00 AM', 
+          event: `API Offline - Mock ${dataType} Anomaly`, 
+          insight: `Showing mock anomaly data for ${dataType}. Start Python server for real Isolation Forest ML.`, 
+          action: 'Start Backend Server' 
+        }
+      ]
+    };
+  }
+  // prediction with ML
+  // async makePrediction(buildingId, dataType, hoursAhead = 24, includeAnomaly = true) {
+  //   try {
+  //     const response = await api.post(`${this.baseURL}/`, {
+  //       building_id: buildingId,
+  //       data_type: dataType,
+  //       hours_ahead: hoursAhead,
+  //       include_anomaly: includeAnomaly
+  //     })
+      
+  //     return response
+  //   } catch (error) {
+  //     console.error('Prediction error:', error)
+  //     // Return mock prediction for development
+  //     return this.generateMockPrediction(buildingId, dataType, hoursAhead)
+  //   }
+  // }
 
   // What-if analysis
   async whatIfAnalysis(buildingId, scenario, parameters) {

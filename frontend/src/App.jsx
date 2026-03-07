@@ -12,8 +12,10 @@ import webSocketService from './services/websocket'
 import { STATUS_COLORS, DATA_TYPES } from './utils/constants'
 import WhatIfSimulator from './components/WhatIfSimulator'
 import AnomalyAlerts from './components/AnomalyAlerts'
-import TrendPredictor from './components/TrendPredictor'
+import AIPredictions from './components/AIPredictions'
 import mlService from './services/mlService'
+import BuildingDashboard from './components/CampusScene/BuildingDashboard'
+import OpsCommandCenter from './components/OpsCommandCenter'
 
 function App() {
   const [stats, setStats] = useState([])
@@ -219,7 +221,7 @@ function App() {
           </div>
           
           {/* Main View Area */}
-          <div className="flex-1 overflow-hidden p-4">
+          <div className="flex-1 overflow-hidden p-4 relative">
             {activeView === '3d' ? (
               <div className="h-full rounded-xl overflow-hidden border border-gray-700">
                 <CampusScene 
@@ -228,36 +230,12 @@ function App() {
                   selectedBuilding={selectedBuilding}
                 />
               </div>
+            ) : activeView === 'operations' ? (
+              <div className="h-full rounded-xl overflow-hidden border border-gray-700">
+                <OpsCommandCenter/>
+              </div>
             ) : (
               <div className="h-full flex flex-col">
-                {/* Selected Building Info */}
-                {selectedBuilding && (
-                  <div className="glass-card p-4 mb-4">
-                    <h3 className="text-lg font-semibold mb-2">Selected Building: {selectedBuilding.name || selectedBuilding.building_id}</h3>
-                    <div className="grid grid-cols-4 gap-4">
-                      <div className="text-center">
-                        <p className="text-gray-400">Sustainability Score</p>
-                        <p className={`text-2xl font-bold ${selectedBuilding.status === 'good' ? 'text-green-500' : selectedBuilding.status === 'warning' ? 'text-yellow-500' : 'text-red-500'}`}>
-                          {selectedBuilding.sustainability_score}/100
-                        </p>
-                      </div>
-                      <div className="text-center">
-                        <p className="text-gray-400">Energy Usage</p>
-                        <p className="text-2xl font-bold">{selectedBuilding.avg_energy?.toFixed(1)} kWh</p>
-                      </div>
-                      <div className="text-center">
-                        <p className="text-gray-400">Occupancy</p>
-                        <p className="text-2xl font-bold">{selectedBuilding.occupancy || 0}</p>
-                      </div>
-                      <div className="text-center">
-                        <p className="text-gray-400">Status</p>
-                        <span className={`px-3 py-1 rounded-full text-sm ${selectedBuilding.status === 'good' ? 'bg-green-500/20 text-green-300' : selectedBuilding.status === 'warning' ? 'bg-yellow-500/20 text-yellow-300' : 'bg-red-500/20 text-red-300'}`}>
-                          {selectedBuilding.status || 'unknown'}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                )}
                 
                 {/* Dashboard Grid */}
                 <div className="h-full flex flex-col">
@@ -280,7 +258,7 @@ function App() {
 
                   {/* Tab content */}
                   {activeTab === 'overview' && (
-                    <div className={`flex-1 grid grid-cols-3 gap-4 overflow-hidden ${selectedBuilding? 'mb-32': 'mb-0'}`}>
+                    <div className={`flex-1 grid grid-cols-3 gap-4 overflow-hidden mb-0`}>
                       <div className="col-span-2 overflow-y-auto">
                         <Dashboard stats={stats} />
                       </div>
@@ -292,9 +270,9 @@ function App() {
                   )}
 
                   {activeTab === 'predictions' && (
-                    <div className={`flex-1 grid grid-cols-3 gap-4 overflow-hidden ${selectedBuilding? 'mb-32': 'mb-0'}`}>
+                    <div className={`flex-1 grid grid-cols-3 gap-4 overflow-hidden mb-0`}>
                       <div className="col-span-2 overflow-y-auto">
-                        <TrendPredictor selectedBuilding={selectedBuilding} />
+                        <AIPredictions selectedBuilding={selectedBuilding} />
                       </div>
                       <div className="space-y-4 overflow-y-auto">
                         <MetricsPanel />
@@ -304,7 +282,7 @@ function App() {
                   )}
 
                   {activeTab === 'what-if' && (
-                    <div className={`flex-1 overflow-y-auto ${selectedBuilding? 'mb-32': 'mb-0'}`}>
+                    <div className={`flex-1 overflow-y-auto mb-0`}>
                       <WhatIfSimulator selectedBuilding={selectedBuilding} />
                     </div>
                   )}
@@ -317,6 +295,10 @@ function App() {
                 </div>
               </div>
             )}
+            <BuildingDashboard 
+              building={selectedBuilding} 
+              onClose={() => handleBuildingSelect(null)} 
+            />
           </div>
         </main>
       </div>
