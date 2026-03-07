@@ -40,6 +40,13 @@ const Header = ({ connected, onSimulate, activeView, onViewChange }) => {
             <FiMap />
             <span>3D Campus</span>
           </button>
+          <button
+            onClick={() => onViewChange('operations')}
+            className={`px-4 py-2 rounded-md flex items-center space-x-2 transition ${activeView === 'operations' ? 'bg-gray-700 text-white' : 'text-gray-400 hover:text-white'}`}
+          >
+            <FiSettings />
+            <span>Operations</span>
+          </button>
         </div>
         
         {/* Right side: Actions */}
@@ -57,11 +64,6 @@ const Header = ({ connected, onSimulate, activeView, onViewChange }) => {
             <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full"></span>
           </button>
           
-          <button className="p-2 hover:bg-gray-700 rounded-lg transition">
-            <FiSettings className="text-xl" />
-          </button>
-          
-          <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full"></div>
         </div>
       </div>
     </header>
