@@ -1,9 +1,8 @@
 import asyncio
 import random
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import Dict, Any
 import numpy as np
-
 from app.db.influx_client import write_sensor_data
 from app.core.config import settings
 
@@ -11,6 +10,7 @@ class DataGenerator:
     def __init__(self):
         self.buildings = [f"building_{i}" for i in range(1, settings.CAMPUS_BUILDINGS + 1)]
         self.data_types = ["energy", "water", "occupancy", "temperature", "co2"]
+        self.is_running = False # Control flag for the automated loop
         
         # Base values for each building type
         self.building_profiles = {
@@ -21,7 +21,6 @@ class DataGenerator:
             "laboratory": {"energy_base": 200, "water_base": 400, "occupancy_base": 30}
         }
         
-        # Assign random profiles to buildings
         self.building_types = {}
         for building in self.buildings:
             self.building_types[building] = random.choice(list(self.building_profiles.keys()))
@@ -91,39 +90,43 @@ class DataGenerator:
         elif anomaly_type == "gradual_decrease":
             return base_value * random.uniform(0.5, 0.9)
         
-        return base_value
+        return base_value  
     
-    async def generate_realtime_data(self, duration_minutes: int, interval_seconds: int):
-        """Generate real-time data stream"""
-        end_time = datetime.now() + timedelta(minutes=duration_minutes)
-        anomaly_probability = 0.05  # 5% chance of anomaly
-        
-        print(f"Starting real-time data generation for {duration_minutes} minutes...")
-        
-        while datetime.now() < end_time:
-            for building in self.buildings:
-                for data_type in self.data_types:
-                    # Generate normal value
-                    value = self.generate_sensor_value(building, data_type)
-                    
-                    # Check for anomaly
-                    if random.random() < anomaly_probability:
-                        value = self.generate_anomaly(building, data_type, value)
-                        print(f"ANOMALY: {building} {data_type}: {value}")
-                    
-                    # Write to database
-                    write_sensor_data(building, data_type, value)
+    async def start_continuous_simulation(self, interval_seconds: int = 300):
+        """Infinite loop that generates data continuously"""
+        if self.is_running:
+            print("Simulation is already running.")
+            return
             
-            print(f"Generated data batch at {datetime.now().strftime('%H:%M:%S')}")
-            
-            # Wait for next interval
-            await asyncio.sleep(interval_seconds)
+        self.is_running = True
+        anomaly_probability = 0.05 
         
-        print("Real-time data generation completed")
+        print(f"[{datetime.now().strftime('%H:%M:%S')}] Started automated real-time data simulation...")
+        
+        while self.is_running:
+            try:
+                for building in self.buildings:
+                    for data_type in self.data_types:
+                        value = self.generate_sensor_value(building, data_type)
+                        
+                        if random.random() < anomaly_probability:
+                            value = self.generate_anomaly(building, data_type, value)
+                            print(f"ANOMALY TRIGGERED: {building} | {data_type}: {value}")
+                        
+                        write_sensor_data(building, data_type, value)
+                        
+                # Wait for the next tick
+                await asyncio.sleep(interval_seconds)
+                
+            except Exception as e:
+                print(f"Error in simulation loop: {e}")
+                await asyncio.sleep(120) # Prevent crash loop
+                
+        print("Automated simulation stopped.")
+
+    def stop_simulation(self):
+        """Gracefully stops the infinite loop"""
+        self.is_running = False
 
 # Singleton instance
 data_generator = DataGenerator()
-
-async def generate_realtime_data(duration_minutes: int = 5, interval_seconds: int = 2):
-    """Public function to start data generation"""
-    await data_generator.generate_realtime_data(duration_minutes, interval_seconds)

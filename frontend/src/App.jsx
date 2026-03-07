@@ -264,7 +264,6 @@ function App() {
                       </div>
                       <div className="space-y-4 overflow-y-auto">
                         <Leaderboard stats={stats} />
-                        <AnomalyAlerts buildings={stats} />
                       </div>
                     </div>
                   )}

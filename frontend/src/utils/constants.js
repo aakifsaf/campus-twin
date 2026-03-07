@@ -71,7 +71,8 @@ export const API_ENDPOINTS = {
     SENSOR: '/data/sensor',
     STATS: '/data/stats',
     BUILDINGS: '/data/buildings',
-    SIMULATE: '/data/simulate'
+    SIMULATION_STATUS: '/data/simulation/status',
+    TOGGLE_SIMULATION:  '/data/simulation/toggle'
   },
   WS: `${import.meta.env.VITE_WS_URL}`
 };

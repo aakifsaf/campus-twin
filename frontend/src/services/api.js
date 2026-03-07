@@ -46,19 +46,15 @@ export const dataAPI = {
     return api.get(API_ENDPOINTS.DATA.BUILDINGS);
   },
   
-  // Start simulation
-  startSimulation: (duration = 5, interval = 2) => {
-    return api.post(API_ENDPOINTS.DATA.SIMULATE, null, {
-      params: { duration_minutes: duration, interval_seconds: interval }
-    });
+  getStatus: async () => {
+      const response = await api.get(API_ENDPOINTS.DATA.SIMULATION_STATUS);
+      return response
   },
-  
-  // Add manual data (for testing)
-  addManualData: (buildingId, dataType, value) => {
-    return api.post('/data/manual-data', null, {
-      params: { building_id: buildingId, data_type: dataType, value }
-    });
-  }
+
+  toggleSimulation: async () => {
+      const response = await api.post(API_ENDPOINTS.DATA.TOGGLE_SIMULATION);
+      return response
+    }
 };
 
 // Mock data for development

@@ -7,23 +7,28 @@ from app.core.config import settings
 from app.api.endpoints import data, predictions, websocket
 from app.db.influx_client import init_influxdb
 from app.db.influx_client import create_initial_data
+from app.simulation.data_generator import data_generator
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     print("🚀 Starting application...")
     
     init_influxdb() 
-
-    asyncio.create_task(run_seeding_in_background())
+    seed_task = asyncio.create_task(run_seeding_in_background())
+    sim_task = asyncio.create_task(data_generator.start_continuous_simulation(interval_seconds=300))
     
     print("✅ Port binding in progress, seeding will continue in background.")
     yield
+    data_generator.stop_simulation()
+    sim_task.cancel()
+    try:
+        await sim_task
+    except asyncio.CancelledError:
+        print("✅ Continuous simulation stopped gracefully.")
     print("🛑 Application shutdown...")
 
 async def run_seeding_in_background():
     try:
-        # If your function is synchronous, use asyncio.to_thread
-        # to prevent it from blocking the event loop
         await asyncio.to_thread(create_initial_data)
         print("📊 Initial data seeding completed successfully.")
     except Exception as e:
@@ -48,7 +53,7 @@ app.add_middleware(
 
 # Include routers
 app.include_router(data.router, prefix=f"{settings.API_V1_STR}/data", tags=["data"])
-app.include_router(predictions.router, prefix=f"{settings.API_V1_STR}/predict", tags=["predictions"])
+app.include_router(predictions.router, prefix=f"{settings.API_V1_STR}/ml", tags=["predictions"])
 app.include_router(websocket.router, prefix=f"{settings.API_V1_STR}/ws", tags=["websocket"])
 
 @app.get("/")

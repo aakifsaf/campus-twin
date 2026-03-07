@@ -40,15 +40,6 @@ const MLStatusBadge = () => {
         </span>
         <div className={`w-2 h-2 rounded-full ${allTrained ? 'bg-green-500 animate-pulse' : 'bg-yellow-500'}`}></div>
       </div>
-      
-      <button
-        onClick={refreshStatus}
-        disabled={loading}
-        className="p-1 hover:bg-gray-700 rounded transition"
-        title="Refresh ML Status"
-      >
-        <FiRefreshCw className={`text-sm ${loading ? 'animate-spin' : ''}`} />
-      </button>
     </div>
   )
 }

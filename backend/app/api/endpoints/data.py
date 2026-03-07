@@ -5,7 +5,7 @@ import asyncio
 
 from app.db.influx_client import query_sensor_data, get_building_stats, write_sensor_data
 from app.api.models import SensorDataResponse, BuildingStatsResponse
-from app.simulation.data_generator import generate_realtime_data
+from app.simulation.data_generator import data_generator
 
 router = APIRouter()
 
@@ -39,7 +39,7 @@ async def get_sensor_data(
 
 @router.get("/stats", response_model=BuildingStatsResponse)
 async def get_building_statistics(
-    hours: int = Query(24, description="Hours of data to retrieve", ge=1, le=720)
+    hours: int = Query(720, description="Hours of data to retrieve", ge=1, le=720)
 ):
     """
     Get sustainability statistics for all buildings
@@ -61,30 +61,24 @@ async def get_building_statistics(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error getting statistics: {str(e)}")
 
-@router.post("/simulate")
-async def simulate_data(
-    background_tasks: BackgroundTasks,
-    duration_minutes: int = Query(5, description="Duration of simulation in minutes"),
-    interval_seconds: int = Query(2, description="Interval between data points")
-):
-    """
-    Start a real-time data simulation
-    """
-    try:
-        # Start simulation in background
-        background_tasks.add_task(
-            generate_realtime_data,
-            duration_minutes,
-            interval_seconds
-        )
-        
-        return {
-            "message": f"Simulation started for {duration_minutes} minutes",
-            "interval": f"{interval_seconds} seconds",
-            "start_time": datetime.utcnow().isoformat()
-        }
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error starting simulation: {str(e)}")
+@router.get("/simulation/status")
+def get_simulation_status():
+    """Check if the automated data stream is currently running"""
+    return {
+        "is_running": data_generator.is_running,
+        "buildings_tracked": len(data_generator.buildings)
+    }
+
+@router.post("/simulation/toggle")
+def toggle_simulation():
+    """Pause or Resume the automated data generation"""
+    if data_generator.is_running:
+        data_generator.stop_simulation()
+        return {"status": "paused", "message": "Simulation stopped."}
+    else:
+        # Start it back up in the background
+        asyncio.create_task(data_generator.start_continuous_simulation(interval_seconds=300))
+        return {"status": "running", "message": "Simulation resumed."}
 
 @router.get("/buildings")
 async def get_buildings_list():

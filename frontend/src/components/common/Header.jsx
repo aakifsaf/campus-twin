@@ -1,6 +1,7 @@
 import { FiMenu, FiGrid, FiMap, FiSettings, FiBell } from 'react-icons/fi'
 import { TbBuildingEstate } from 'react-icons/tb'
 import MLStatusBadge from './MLStatusBadge'
+import SimulationControl from './SimulationControl'
 
 const Header = ({ connected, onSimulate, activeView, onViewChange }) => {
   return (
@@ -17,7 +18,7 @@ const Header = ({ connected, onSimulate, activeView, onViewChange }) => {
           </div>
           
           {/* Connection Status Badge */}
-          <div className={`px-3 py-1 rounded-full text-sm flex items-center ${connected ? 'bg-green-500/20 text-green-300' : 'bg-yellow-500/20 text-yellow-300'}`}>
+          <div className={`px-2 py-1 rounded-full text-sm flex items-center ${connected ? 'bg-green-500/20 text-green-300' : 'bg-yellow-500/20 text-yellow-300'}`}>
             <div className={`w-2 h-2 rounded-full mr-2 ${connected ? 'bg-green-500 animate-pulse' : 'bg-yellow-500'}`}></div>
             {connected ? 'Live' : 'Offline'}
           </div>
@@ -28,21 +29,21 @@ const Header = ({ connected, onSimulate, activeView, onViewChange }) => {
         <div className="flex items-center space-x-2 bg-gray-900 rounded-lg p-1">
           <button
             onClick={() => onViewChange('dashboard')}
-            className={`px-4 py-2 rounded-md flex items-center space-x-2 transition ${activeView === 'dashboard' ? 'bg-gray-700 text-white' : 'text-gray-400 hover:text-white'}`}
+            className={`px-3 py-2 rounded-md flex items-center space-x-1 transition ${activeView === 'dashboard' ? 'bg-gray-700 text-white' : 'text-gray-400 hover:text-white'}`}
           >
             <FiGrid />
             <span>Dashboard</span>
           </button>
           <button
             onClick={() => onViewChange('3d')}
-            className={`px-4 py-2 rounded-md flex items-center space-x-2 transition ${activeView === '3d' ? 'bg-gray-700 text-white' : 'text-gray-400 hover:text-white'}`}
+            className={`px-3 py-2 rounded-md flex items-center space-x-1 transition ${activeView === '3d' ? 'bg-gray-700 text-white' : 'text-gray-400 hover:text-white'}`}
           >
             <FiMap />
             <span>3D Campus</span>
           </button>
           <button
             onClick={() => onViewChange('operations')}
-            className={`px-4 py-2 rounded-md flex items-center space-x-2 transition ${activeView === 'operations' ? 'bg-gray-700 text-white' : 'text-gray-400 hover:text-white'}`}
+            className={`px-3 py-2 rounded-md flex items-center space-x-1 transition ${activeView === 'operations' ? 'bg-gray-700 text-white' : 'text-gray-400 hover:text-white'}`}
           >
             <FiSettings />
             <span>Operations</span>
@@ -51,14 +52,7 @@ const Header = ({ connected, onSimulate, activeView, onViewChange }) => {
         
         {/* Right side: Actions */}
         <div className="flex items-center space-x-4">
-          <button
-            onClick={onSimulate}
-            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg font-medium transition flex items-center space-x-2"
-          >
-            <FiGrid />
-            <span>Start Simulation</span>
-          </button>
-          
+          <SimulationControl/>
           <button className="p-2 hover:bg-gray-700 rounded-lg transition relative">
             <FiBell className="text-xl" />
             <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full"></span>
